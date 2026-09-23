@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kopun Finance Manager v3</title>
+<style>
+:root{
+  --bg:#f4f7fb;--panel:#fff;--text:#172033;--muted:#6f7b8f;--line:#dce3ed;
+  --pri:#2147d8;--dark:#0f1830;--ok:#14835b;--bad:#c53c3c;--warn:#d58c16;
+}
+*{box-sizing:border-box}body{margin:0;font:14px Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.hidden{display:none!important}body.locked .app{display:none}
+.auth{display:none;min-height:100vh;align-items:center;justify-content:center;padding:22px;background:linear-gradient(135deg,#0e1730,#2147d8)}
+body.locked .auth{display:flex}
+.auth-card{width:min(450px,100%);background:#fff;border-radius:18px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.logo{width:60px;height:60px;border-radius:15px;background:var(--dark);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px}
+.auth h1{margin:14px 0 4px}.muted{color:var(--muted);font-size:12px}.msg{font-size:12px;color:var(--bad);min-height:16px}
+.layout{display:grid;grid-template-columns:255px 1fr;min-height:100vh}
+aside{background:var(--dark);color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+aside h2{margin:0;font-size:19px}aside .sub{color:#aeb9d0;font-size:11px;margin-top:5px}
+nav{margin-top:18px}nav button{width:100%;text-align:left;border:0;background:transparent;color:#dfe6f4;padding:11px 12px;border-radius:8px;margin:2px 0;cursor:pointer}
+nav button:hover,nav button.active{background:#263451}
+main{padding:20px;min-width:0}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px}
+header h1{margin:0}header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+button{border:0;border-radius:8px;background:var(--pri);color:#fff;padding:9px 13px;font-weight:700;cursor:pointer}
+button.light{background:#edf2f8;color:#26334b}button.danger{background:#ffe4e4;color:#982525}button.warn{background:#fff0d4;color:#8c5a04}button.success{background:#ddf5eb;color:#116947}
+button.small{padding:6px 8px;font-size:11px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:15px;overflow:auto}
+.panel h3{margin:0 0 12px}.panel h4{margin:14px 0 8px}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px}.card span{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.card b{font-size:21px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:#526078;margin-bottom:8px}input,select,textarea{display:block;width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;margin-top:5px}
+textarea{min-height:72px;resize:vertical}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.right{margin-left:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f7f9fc;position:sticky;top:0;z-index:1}td.actions{white-space:nowrap}
+.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:700;background:#eef2f8;color:#33425c}.badge.ok{background:#dff5ea;color:#116847}.badge.bad{background:#ffe3e3;color:#9f2525}.badge.warn{background:#fff0d6;color:#8a5b08}.badge.info{background:#e8eeff;color:#2848a7}
+.kpi-note{margin-top:5px;color:var(--muted);font-size:11px}.notice{border-left:4px solid var(--warn);background:#fff8e8;padding:10px 12px;border-radius:7px;margin-bottom:10px}.notice.bad{border-color:var(--bad);background:#fff0f0}.notice.ok{border-color:var(--ok);background:#edfbf5}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}.section-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.mono{font-family:Consolas,monospace}
+@media(max-width:1200px){.cards{grid-template-columns:repeat(3,1fr)}.form3{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:relative;height:auto}.grid2,.grid3,.form2,.form3{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){main{padding:12px}.cards{grid-template-columns:1fr}.auth-card{padding:20px}}
+@media print{aside,header,.no-print,button{display:none!important}.layout{display:block}main{padding:0}.page{display:none!important}.print-target{display:block!important}.panel{border:0}}
+</style>
+</head>
+<body class="locked">
+
+<div id="auth" class="auth">
+  <div class="auth-card">
+    <div class="logo">KF</div>
+    <h1>Kopun Finance Manager</h1>
+    <p class="muted">Automated Offline Finance Company Management System</p>
+
+    <div id="setupBox" class="hidden">
+      <h3>First-Time Business Setup</h3>
+      <label>Finance Company Name<input id="suCompany"></label>
+      <label>Administrator Name<input id="suName"></label>
+      <label>Create Username<input id="suUser"></label>
+      <label>Create Password<input id="suPass" type="password" placeholder="Minimum 8 characters"></label>
+      <label>Confirm Password<input id="suPass2" type="password"></label>
+      <button onclick="firstSetup()">Create Business Account</button>
+      <div id="suMsg" class="msg"></div>
+    </div>
+
+    <div id="loginBox" class="hidden">
+      <h3>Business Login</h3>
+      <label>Username<input id="liUser"></label>
+      <label>Password<input id="liPass" type="password" onkeydown="if(event.key==='Enter')login()"></label>
+      <div class="row"><button onclick="login()">Login</button><button class="light" onclick="toggleRecovery()">Forgot Password</button></div>
+      <div id="liMsg" class="msg"></div>
+
+      <div id="recoveryBox" class="hidden">
+        <hr><h4>Administrator Recovery</h4>
+        <label>Recovery Code<input id="rcCode"></label>
+        <label>New Username<input id="rcUser"></label>
+        <label>New Password<input id="rcPass" type="password"></label>
+        <button onclick="recoverAdmin()">Reset Administrator Login</button>
+        <hr>
+        <h4>Lost Recovery Code?</h4>
+        <p class="muted">Use Emergency Local Reset only on your own finance computer. It changes the Administrator login but keeps customers, loans, repayments, expenses, documents and other finance records.</p>
+        <label>New Administrator Username<input id="erUser" placeholder="admin"></label>
+        <label>New Administrator Password<input id="erPass" type="password" placeholder="Minimum 8 characters"></label>
+        <label>Confirm New Password<input id="erPass2" type="password"></label>
+        <button class="warn" onclick="emergencyAdminReset()">Emergency Local Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app layout">
+<aside>
+  <h2>Kopun Finance Manager</h2>
+  <div class="sub" id="who">Offline Finance System</div>
+  <nav>
+    <button data-page="dashboard">Dashboard</button>
+    <button data-page="customers">Customers</button>
+    <button data-page="applications">Loan Applications</button>
+    <button data-page="loans">Loans & Schedules</button>
+    <button data-page="repayments">Repayments & Receipts</button>
+    <button data-page="expenses">Expenses</button>
+    <button data-page="cashbook">Cashbook</button>
+    <button data-page="statements">Statements</button>
+    <button data-page="reports">Reports</button>
+    <button data-page="notifications">Alerts & Follow-up</button>
+    <button data-page="documents">Documents</button>
+    <button data-page="audit">Audit Trail</button>
+    <button data-page="users">User Management</button>
+    <button data-page="settings">Settings</button>
+    <button data-page="overview">System Overview</button>
+  </nav>
+</aside>
+
+<main>
+<header>
+  <div><h1 id="pageTitle">Dashboard</h1><p id="dateLine"></p></div>
+  <div class="row no-print">
+    <button class="light" onclick="backupData()">Backup</button>
+    <button class="light" onclick="document.getElementById('restoreFile').click()">Restore</button>
+    <input id="restoreFile" type="file" accept=".json,application/json" class="hidden" onchange="restoreData(event)">
+    <button class="danger" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<section id="dashboard" class="page">
+  <div class="cards">
+    <div class="card"><span>Customers</span><b id="dCustomers">0</b><div class="kpi-note">registered</div></div>
+    <div class="card"><span>Active Portfolio</span><b id="dPortfolio">K0.00</b><div class="kpi-note">outstanding</div></div>
+    <div class="card"><span>Collected</span><b id="dCollected">K0.00</b><div class="kpi-note">all repayments</div></div>
+    <div class="card"><span>Overdue Loans</span><b id="dOverdue">0</b><div class="kpi-note">need follow-up</div></div>
+    <div class="card"><span>Net Cash Position</span><b id="dCash">K0.00</b><div class="kpi-note">collections - disbursements - expenses</div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Automatic Alerts</h3><div id="dashAlerts"></div></div>
+    <div class="panel"><h3>Portfolio Snapshot</h3><div id="portfolioSnapshot"></div></div>
+  </div>
+  <div class="panel"><h3>Recent Loans</h3>
+    <table><thead><tr><th>Loan</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Next Due</th><th>Status</th></tr></thead><tbody id="recentLoans"></tbody></table>
+  </div>
+</section>
+
+<section id="customers" class="page hidden">
+  <div class="grid2">
+    <div class="panel">
+      <h3>Register Customer</h3>
+      <div class="form2">
+        <label>Customer ID<input id="cGenerated" readonly></label>
+        <label>Full Name<input id="cName"></label>
+        <label>Phone<input id="cPhone"></label>
+        <label>Email<input id="cEmail"></label>
+        <label>National ID / Reference<input id="cRef"></label>
+        <label>Date of Birth<input id="cDob" type="date"></label>
+        <label>Occupation / Business<input id="cJob"></label>
+        <label>Employer / Business Name<input id="cEmployer"></label>
+        <label>Monthly Income<input id="cIncome" type="number"></label>
+        <label>Address<input id="cAddress"></label>
+      </div>
+      <label>Notes<textarea id="cNotes"></textarea></label>
+      <div class="section-actions"><button onclick="addCustomer()">Save Customer</button></div>
+    </div>
+    <div class="panel">
+      <div class="row"><h3>Customer Register</h3><input id="cSearch" class="right" style="max-width:240px" placeholder="Search customer..." oninput="renderCustomers()"></div>
+      <table><thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Loans</th><th>Outstanding</th><th>Action</th></tr></thead><tbody id="customerTable"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section id="applications" class="page hidden">
+  <div class="panel">
+    <h3>Loan Application</h3>
+    <div class="form3">
+      <label>Application ID<input id="aGenerated" readonly></label>
+      <label>Customer<select id="aCustomer" onchange="prefillApplicationCustomer()"></select></label>
+      <label>Application Date<input id="aDate" type="date"></label>
+      <label>Amount Requested<input id="aAmount" type="number" oninput="calcAffordability()"></label>
+      <label>Preferred Term (months)<input id="aTerm" type="number" value="3" oninput="calcAffordability()"></label>
+      <label>Estimated Interest % / month<input id="aRate" type="number" value="10" oninput="calcAffordability()"></label>
+      <label>Monthly Income<input id="aIncome" type="number" oninput="calcAffordability()"></label>
+      <label>Monthly Expenses<input id="aExpenses" type="number" oninput="calcAffordability()"></label>
+      <label>Disposable Income<input id="aDisposable" readonly></label>
+      <label>Estimated Monthly Installment<input id="aInstallment" readonly></label>
+      <label>Debt/Income Ratio<input id="aRatio" readonly></label>
+      <label>Risk Flag<input id="aRisk" readonly></label>
+      <label>Guarantor Name<input id="aGuarantor"></label>
+      <label>Guarantor Phone<input id="aGuarantorPhone"></label>
+      <label>Security / Collateral<input id="aSecurity"></label>
+    </div>
+    <label>Purpose<textarea id="aPurpose"></textarea></label>
+    <label>Application Notes<textarea id="aNotes"></textarea></label>
+    <div class="section-actions"><button onclick="addApplication()">Submit Application</button></div>
+  </div>
+
+  <div class="panel">
+    <h3>Application Register</h3>
+    <table><thead><tr><th>ID</th><th>Customer</th><th>Requested</th><th>Affordability</th><th>Risk</th><th>PDF</th><th>Status</th><th>Action</th></tr></thead><tbody id="appTable"></tbody></table>
+  </div>
+</section>
+
+<section id="loans" class="page hidden">
+  <div class="panel">
+    <h3>Create Loan</h3>
+    <div class="form3">
+      <label>Loan ID<input id="lGenerated" readonly></label>
+      <label>Approved Application<select id="lApplication" onchange="loadApprovedApplication()"></select></label>
+      <label>Customer<select id="lCustomer"></select></label>
+      <label>Principal<input id="lPrincipal" type="number" oninput="calcLoan()"></label>
+      <label>Interest % / month<input id="lRate" type="number" oninput="calcLoan()"></label>
+      <label>Term (months)<input id="lTerm" type="number" value="3" oninput="calcLoan()"></label>
+      <label>Borrow Date<input id="lDate" type="date" onchange="calcLoan()"></label>
+      <label>Due Date<input id="lDue" readonly></label>
+      <label>Repayment Frequency<select id="lFreq" onchange="calcLoan()"><option>Weekly</option><option>Fortnightly</option><option selected>Monthly</option><option>Single Payment</option></select></label>
+      <label>No. of Installments<input id="lInstallments" readonly></label>
+      <label>Installment Amount<input id="lInstallmentAmount" readonly></label>
+      <label>Total Payable<input id="lTotal" readonly></label>
+    </div>
+    <label>Purpose<input id="lPurpose"></label>
+    <label>Security / Collateral / Notes<textarea id="lSecurity"></textarea></label>
+    <div class="section-actions"><button onclick="createLoan()">Create Loan & Schedule</button></div>
+  </div>
+
+  <div class="panel">
+    <h3>Loan Register</h3>
+    <table><thead><tr><th>ID</th><th>Customer</th><th>Principal</th><th>Total</th><th>Paid</th><th>Penalty</th><th>Balance</th><th>Next Due</th><th>Arrears</th><th>Status</th><th>Action</th></tr></thead><tbody id="loanTable"></tbody></table>
+  </div>
+
+  <div class="panel">
+    <h3>Repayment Schedule Preview</h3>
+    <div id="schedulePreview" class="muted">Select a loan and click Schedule.</div>
+  </div>
+</section>
+
+<section id="repayments" class="page hidden">
+  <div class="grid2">
+    <div class="panel">
+      <h3>Record Repayment</h3>
+      <div class="form2">
+        <label>Receipt No.<input id="pGenerated" readonly></label>
+        <label>Loan<select id="pLoan" onchange="showPaymentBalance()"></select></label>
+        <label>Payment Date<input id="pDate" type="date"></label>
+        <label>Amount<input id="pAmount" type="number"></label>
+        <label>Method<select id="pMethod"><option>Cash</option><option>Bank Transfer</option><option>Mobile Money</option><option>Cheque</option></select></label>
+        <label>Reference<input id="pRef"></label>
+      </div>
+      <div id="pBalance" class="notice">Select a loan.</div>
+      <button onclick="addPayment()">Save Payment & Generate Receipt</button>
+    </div>
+    <div class="panel">
+      <h3>Recent Repayments</h3>
+      <table><thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Loan</th><th>Amount</th><th>Action</th></tr></thead><tbody id="paymentTable"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section id="expenses" class="page hidden">
+  <div class="grid2">
+    <div class="panel">
+      <h3>Record Business Expense</h3>
+      <div class="form2">
+        <label>Expense ID<input id="eGenerated" readonly></label>
+        <label>Date<input id="eDate" type="date"></label>
+        <label>Category<select id="eCategory"><option>Rent</option><option>Salaries</option><option>Transport</option><option>Utilities</option><option>Stationery</option><option>Bank Fees</option><option>Legal / Compliance</option><option>Bad Debt / Write-off</option><option>Other</option></select></label>
+        <label>Amount<input id="eAmount" type="number"></label>
+        <label>Payee<input id="ePayee"></label>
+        <label>Reference<input id="eRef"></label>
+      </div>
+      <label>Description<textarea id="eDescription"></textarea></label>
+      <button onclick="addExpense()">Save Expense</button>
+    </div>
+    <div class="panel">
+      <h3>Expense Register</h3>
+      <table><thead><tr><th>ID</th><th>Date</th><th>Category</th><th>Payee</th><th>Amount</th><th>Description</th></tr></thead><tbody id="expenseTable"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section id="cashbook" class="page hidden">
+  <div class="cards">
+    <div class="card"><span>Cash In</span><b id="cbIn">K0.00</b></div>
+    <div class="card"><span>Loan Disbursements</span><b id="cbLoans">K0.00</b></div>
+    <div class="card"><span>Expenses</span><b id="cbExpenses">K0.00</b></div>
+    <div class="card"><span>Net Cash</span><b id="cbNet">K0.00</b></div>
+    <div class="card"><span>Interest Collected</span><b id="cbInterest">K0.00</b></div>
+  </div>
+  <div class="panel"><h3>Automatic Cashbook</h3>
+    <table><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description</th><th>Cash In</th><th>Cash Out</th><th>Running Balance</th></tr></thead><tbody id="cashbookTable"></tbody></table>
+  </div>
+</section>
+
+<section id="statements" class="page hidden print-target">
+  <div class="panel">
+    <div class="row no-print"><h3>Customer Statement</h3><div style="position:relative;min-width:320px;max-width:420px;flex:1"><input id="sCustomerSearch" autocomplete="off" placeholder="Type customer name, ID or phone..." oninput="searchStatementCustomers()" onfocus="searchStatementCustomers()"><input id="sCustomer" type="hidden"><div id="sCustomerResults" class="hidden" style="position:absolute;left:0;right:0;top:100%;z-index:50;background:#fff;border:1px solid #cbd5e1;border-radius:8px;max-height:240px;overflow:auto;box-shadow:0 10px 25px rgba(0,0,0,.12)"></div></div><button class="light" onclick="window.print()">Print / Save PDF</button><button class="light" onclick="printCustomerConsolidatedReceipt()">Combined Receipt</button></div>
+    <div id="statement"></div>
+  </div>
+</section>
+
+<section id="reports" class="page hidden">
+  <div class="cards">
+    <div class="card"><span>Principal Lent</span><b id="rPrincipal">K0.00</b></div>
+    <div class="card"><span>Interest Contracted</span><b id="rInterest">K0.00</b></div>
+    <div class="card"><span>Interest Collected</span><b id="rInterestCollected">K0.00</b></div>
+    <div class="card"><span>Total Expenses</span><b id="rExpenses">K0.00</b></div>
+    <div class="card"><span>Estimated Net Income</span><b id="rNetIncome">K0.00</b></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Portfolio Aging</h3><div id="agingReport"></div></div>
+    <div class="panel"><h3>Performance Ratios</h3><div id="ratioReport"></div></div>
+  </div>
+  <div class="panel"><div class="row"><h3>Portfolio Report</h3><button class="light right" onclick="exportLoansCSV()">Export CSV</button></div>
+    <table><thead><tr><th>Loan</th><th>Customer</th><th>Principal</th><th>Total</th><th>Collected</th><th>Balance</th><th>Arrears</th><th>Days Overdue</th><th>Status</th></tr></thead><tbody id="reportTable"></tbody></table>
+  </div>
+</section>
+
+<section id="notifications" class="page hidden">
+  <div class="panel"><h3>Automatic Alerts & Follow-up</h3><div id="alertsList"></div></div>
+</section>
+
+<section id="documents" class="page hidden">
+  <div class="panel">
+    <h3>Customer & Loan Documents</h3>
+    <p class="muted">Upload PDF copies of application forms, IDs, payslips, guarantor documents, collateral documents, and signed agreements. Files are stored locally in this browser on this device.</p>
+    <div class="row"><select id="docCustomer" style="max-width:320px"></select><select id="docType" style="max-width:240px"><option>Application Form</option><option>National ID</option><option>Payslip</option><option>Bank Statement</option><option>Guarantor ID</option><option>Collateral Document</option><option>Signed Loan Agreement</option><option>Other</option></select><button onclick="uploadDocument()">Upload PDF</button></div>
+    <table><thead><tr><th>Date</th><th>Customer</th><th>Type</th><th>File</th><th>Action</th></tr></thead><tbody id="documentTable"></tbody></table>
+  </div>
+</section>
+
+<section id="audit" class="page hidden">
+  <div class="panel"><h3>Audit Trail</h3>
+    <table><thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditTable"></tbody></table>
+  </div>
+</section>
+
+<section id="users" class="page hidden">
+  <div class="grid2">
+    <div class="panel">
+      <h3>Create Staff User</h3>
+      <label>Staff Name<input id="uName"></label>
+      <label>Username<input id="uUser"></label>
+      <label>Password<input id="uPass" type="password" placeholder="Minimum 8 characters"></label>
+      <label>Role<select id="uRole"><option>Manager</option><option>Loan Officer</option><option>Cashier</option><option>Admin</option></select></label>
+      <button onclick="addUser()">Create User</button>
+    </div>
+    <div class="panel">
+      <h3>Users</h3>
+      <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody id="userTable"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section id="settings" class="page hidden">
+  <div class="panel">
+    <h3>Company & Automation Settings</h3>
+    <div class="form3">
+      <label>Company Name<input id="setName"></label>
+      <label>Phone<input id="setPhone"></label>
+      <label>Email<input id="setEmail"></label>
+      <label>Address<input id="setAddress"></label>
+      <label>Default Interest % / month<input id="setRate" type="number"></label>
+      <label>Penalty % on overdue installment<input id="setPenaltyRate" type="number"></label>
+      <label>Grace Days<input id="setGrace" type="number"></label>
+      <label>High-Risk Debt/Income Ratio %<input id="setRiskRatio" type="number"></label>
+      <label>Alert Days Before Due<input id="setAlertDays" type="number"></label>
+    </div>
+    <div class="section-actions"><button onclick="saveSettings()">Save Settings</button><button class="light" onclick="uploadBrand('logo')">Upload Logo</button><button class="light" onclick="uploadBrand('letterhead')">Upload Letterhead</button></div>
+    <p class="muted">Currency: PGK / Kina. Automatic penalties use the settings above. Adjust them to match your company's approved lending policy and applicable law.</p>
+  </div>
+</section>
+
+<section id="overview" class="page hidden">
+  <div class="panel">
+    <h3>Kopun Finance Manager v3 — Automated Finance System</h3>
+    <p>This version automates the main day-to-day workflow of a small finance company: customer registration, application assessment, approvals, loan creation, due dates, repayment schedules, arrears, penalties, repayments, receipts, expenses, cashbook, statements, profitability, portfolio aging, alerts, staff roles, documents, audit trail and backups.</p>
+    <h4>Automatic Workflow</h4>
+    <p><b>Customer → Application → Affordability/Risk Check → Approval → Loan → Repayment Schedule → Collections → Arrears/Penalties → Statement → Reports → Audit.</b></p>
+    <h4>Important Production Note</h4>
+    <p class="muted">This is an offline single-file HTML application. It is useful for one-device operation and prototyping. A larger or regulated finance company should use a secured server/database, tested encrypted backups, formal access control, disaster recovery, and legal/compliance review before production deployment.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+const KEY='kopunFinanceManager_v3_auto';
+const SESSION='kopunFinanceSession_v3';
+let db=null,user=null;
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+const money=n=>'K'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=v=>Number(v||0);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+function emptyDB(){
+  return {
+    version:3,
+    settings:{companyName:'Kopun Finance Company',phone:'',email:'',address:'',defaultRate:10,penaltyRate:2,graceDays:3,riskRatio:50,alertDays:3,logo:'',letterhead:''},
+    users:[],customers:[],applications:[],loans:[],payments:[],expenses:[],documents:[],audit:[],
+    counters:{customer:0,application:0,loan:0,receipt:0,expense:0,document:0},
+    recoveryHash:''
+  }
+}
+function loadDB(){try{return JSON.parse(localStorage.getItem(KEY)||'null')||emptyDB()}catch(e){return emptyDB()}}
+function saveDB(){localStorage.setItem(KEY,JSON.stringify(db))}
+function currentSession(){try{return JSON.parse(sessionStorage.getItem(SESSION)||'null')}catch(e){return null}}
+function setSession(u){sessionStorage.setItem(SESSION,JSON.stringify(u))}
+function clearSession(){sessionStorage.removeItem(SESSION)}
+function cleanUser(u){return u?{id:u.id,name:u.name,username:u.username,role:u.role,active:u.active}:null}
+async function hashText(s){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  catch(e){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
+}
+function audit(action,details=''){
+  const u=user||currentSession();db.audit.unshift({id:Date.now()+'-'+Math.random().toString(36).slice(2),time:new Date().toISOString(),user:u?.username||'SYSTEM',role:u?.role||'SYSTEM',action,details});db.audit=db.audit.slice(0,5000);saveDB()
+}
+function roleCan(area){
+  const map={Admin:['all'],Manager:['dashboard','customers','applications','loans','repayments','expenses','cashbook','statements','reports','notifications','documents','audit','settings'],'Loan Officer':['dashboard','customers','applications','loans','statements','notifications','documents'],Cashier:['dashboard','customers','repayments','cashbook','statements','reports','notifications']};
+  const a=map[user?.role]||[];return a.includes('all')||a.includes(area)
+}
+function configureNav(){
+  document.querySelectorAll('nav button').forEach(b=>{
+    const p=b.dataset.page;
+    const allowed=p==='users'?user.role==='Admin':(p==='overview'||roleCan(p));
+    b.classList.toggle('hidden',!allowed);
+    b.onclick=()=>showPage(p,b)
+  });
+}
+function showPage(p,b){
+  document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b?.classList.add('active');
+  $('pageTitle').textContent=b?.textContent||p;renderAll()
+}
+function nextId(counter,prefix){return prefix+'-'+String((db.counters[counter]||0)+1).padStart(4,'0')}
+function nextAndBump(counter,prefix){db.counters[counter]=(db.counters[counter]||0)+1;return prefix+'-'+String(db.counters[counter]).padStart(4,'0')}
+function custName(id){return db.customers.find(c=>c.id===id)?.name||'Unknown'}
+function loanById(id){return db.loans.find(l=>l.id===id)}
+function paymentsFor(id){return db.payments.filter(p=>p.loanId===id)}
+function paid(id){return paymentsFor(id).reduce((s,p)=>s+num(p.amount),0)}
+function daysBetween(a,b){const x=new Date(a+'T12:00:00'),y=new Date(b+'T12:00:00');return Math.floor((y-x)/86400000)}
+function addDays(dateStr,n){const d=new Date(dateStr+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function addMonthsSafe(dateStr,n){
+  const d=new Date(dateStr+'T12:00:00'),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return d.toISOString().slice(0,10)
+}
+function installmentCount(months,freq){
+  if(freq==='Weekly')return Math.max(1,Math.round(months*52/12));
+  if(freq==='Fortnightly')return Math.max(1,Math.round(months*26/12));
+  if(freq==='Monthly')return Math.max(1,months);
+  return 1
+}
+function generateSchedule(loan){
+  const count=installmentCount(num(loan.months),loan.frequency),amt=num(loan.totalPayable)/count,rows=[];
+  for(let i=1;i<=count;i++){
+    let due;
+    if(loan.frequency==='Weekly') due=addDays(loan.date,7*i);
+    else if(loan.frequency==='Fortnightly') due=addDays(loan.date,14*i);
+    else if(loan.frequency==='Monthly') due=addMonthsSafe(loan.date,i);
+    else due=loan.dueDate;
+    rows.push({no:i,dueDate:due,scheduled: i===count ? num(loan.totalPayable)-amt*(count-1):amt});
+  }
+  return rows
+}
+function paymentAllocation(loan){
+  const sched=generateSchedule(loan),totalPaid=paid(loan.id),todayStr=today();
+  let remainingPaid=totalPaid,arrears=0,next=null,overdueInstallments=0;
+  for(const s of sched){
+    const covered=Math.min(remainingPaid,s.scheduled);remainingPaid-=covered;
+    const outstanding=Math.max(0,s.scheduled-covered);
+    if(outstanding>0 && !next)next={...s,outstanding};
+    if(outstanding>0 && s.dueDate<todayStr){arrears+=outstanding;overdueInstallments++}
+  }
+  return {schedule:sched,arrears,next,overdueInstallments}
+}
+function penaltyFor(loan){
+  const alloc=paymentAllocation(loan),rate=num(db.settings.penaltyRate),grace=num(db.settings.graceDays);
+  let penalty=0;
+  for(const s of alloc.schedule){
+    if(s.dueDate>=today())continue;
+    const overdueDays=daysBetween(s.dueDate,today());
+    if(overdueDays<=grace)continue;
+    // penalty per overdue installment, once after grace
+    const paidBefore=paymentsFor(loan.id).filter(p=>p.date<=s.dueDate).reduce((a,p)=>a+num(p.amount),0);
+    const prev=s.no===1?0:alloc.schedule.slice(0,s.no-1).reduce((a,x)=>a+x.scheduled,0);
+    const covered=Math.max(0,Math.min(s.scheduled,paidBefore-prev));
+    const outstanding=Math.max(0,s.scheduled-covered);
+    penalty+=outstanding*rate/100;
+  }
+  return penalty
+}
+function loanBalance(loan){return Math.max(0,num(loan.totalPayable)+penaltyFor(loan)-paid(loan.id))}
+function loanStatus(loan){
+  const b=loanBalance(loan);if(b<=0.009)return 'Closed';
+  const alloc=paymentAllocation(loan);if(alloc.arrears>0)return 'Overdue';
+  if(loan.date>today())return 'Pending Disbursement';
+  return 'Active'
+}
+function daysOverdue(loan){
+  const alloc=paymentAllocation(loan);if(!alloc.arrears)return 0;
+  const first=alloc.schedule.find(s=>s.dueDate<today());return first?Math.max(0,daysBetween(first.dueDate,today())):0
+}
+function outstandingCustomer(id){return db.loans.filter(l=>l.customerId===id).reduce((s,l)=>s+loanBalance(l),0)}
+function interestCollected(){
+  return db.payments.reduce((s,p)=>{
+    const l=loanById(p.loanId);if(!l||!num(l.totalPayable))return s;
+    return s+num(p.amount)*(num(l.interest)/num(l.totalPayable))
+  },0)
+}
+function toBadge(status){
+  const c=status==='Closed'||status==='Approved'?'ok':status==='Overdue'||status==='Rejected'?'bad':status==='Pending'?'warn':'info';
+  return `<span class="badge ${c}">${status}</span>`
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+async function firstSetup(){
+  const c=$('suCompany').value.trim(),n=$('suName').value.trim(),u=$('suUser').value.trim(),p=$('suPass').value,p2=$('suPass2').value;
+  if(!c||!u||p.length<8){$('suMsg').textContent='Enter company name, username and a password of at least 8 characters.';return}
+  if(p!==p2){$('suMsg').textContent='Passwords do not match.';return}
+  db=loadDB();if(db.users.length){location.reload();return}
+  const salt=Math.random().toString(36).slice(2)+Date.now(),passwordHash=await hashText(u.toLowerCase()+'|'+p+'|'+salt);
+  const recovery=(Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8)).toUpperCase();
+  db.recoveryHash=await hashText(recovery);
+  const rec={id:'USR-'+Date.now(),name:n||'Administrator',username:u,role:'Admin',active:true,salt,passwordHash,created:new Date().toISOString()};
+  db.users.push(rec);db.settings.companyName=c;user=cleanUser(rec);setSession(user);audit('INITIAL_SETUP','Created administrator account');
+  alert('IMPORTANT: Save this recovery code somewhere safe. It is shown once:\\n\\n'+recovery);enterApp()
+}
+async function login(){
+  db=loadDB();const u=$('liUser').value.trim().toLowerCase(),p=$('liPass').value,rec=db.users.find(x=>x.username.toLowerCase()===u&&x.active);
+  if(!rec){$('liMsg').textContent='Incorrect username or password.';return}
+  const h=await hashText(rec.username.toLowerCase()+'|'+p+'|'+rec.salt);if(h!==rec.passwordHash){$('liMsg').textContent='Incorrect username or password.';return}
+  user=cleanUser(rec);setSession(user);audit('LOGIN','User logged in');enterApp()
+}
+function toggleRecovery(){$('recoveryBox').classList.toggle('hidden')}
+async function recoverAdmin(){
+  db=loadDB();const code=await hashText($('rcCode').value.trim().toUpperCase());if(code!==db.recoveryHash){$('liMsg').textContent='Invalid recovery code.';return}
+  const admin=db.users.find(x=>x.role==='Admin'&&x.active);if(!admin){$('liMsg').textContent='No active administrator found.';return}
+  const p=$('rcPass').value,u=$('rcUser').value.trim()||admin.username;if(p.length<8){$('liMsg').textContent='New password must be at least 8 characters.';return}
+  admin.username=u;admin.salt=Math.random().toString(36).slice(2)+Date.now();admin.passwordHash=await hashText(u.toLowerCase()+'|'+p+'|'+admin.salt);
+  user=cleanUser(admin);setSession(user);audit('ADMIN_RECOVERY','Administrator login reset');enterApp()
+}
+
+async function emergencyAdminReset(){
+  db=loadDB();
+  if(!db.users.length){$('liMsg').textContent='No business account exists yet. Use First-Time Business Setup.';return}
+  const u=$('erUser').value.trim(),p=$('erPass').value,p2=$('erPass2').value;
+  if(!u){$('liMsg').textContent='Enter a new Administrator username.';return}
+  if(p.length<8){$('liMsg').textContent='New password must be at least 8 characters.';return}
+  if(p!==p2){$('liMsg').textContent='New passwords do not match.';return}
+  if(!confirm('Emergency reset will change the Administrator login on this device. Existing finance records will be kept. Continue?'))return;
+  let admin=db.users.find(x=>x.role==='Admin');
+  if(!admin){
+    admin={id:'USR-'+Date.now(),name:'Administrator',username:u,role:'Admin',active:true,created:new Date().toISOString()};
+    db.users.push(admin);
+  }
+  admin.active=true;admin.username=u;admin.salt=Math.random().toString(36).slice(2)+Date.now();admin.passwordHash=await hashText(u.toLowerCase()+'|'+p+'|'+admin.salt);
+  const recovery=(Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8)).toUpperCase();
+  db.recoveryHash=await hashText(recovery);
+  saveDB();
+  user=cleanUser(admin);setSession(user);audit('EMERGENCY_ADMIN_RESET','Administrator login reset locally; finance records preserved');
+  alert('Administrator login reset successfully. Save this NEW recovery code somewhere safe:\n\n'+recovery);
+  enterApp();
+}
+function logout(){audit('LOGOUT','User logged out');clearSession();location.reload()}
+
+function enterApp(){
+  document.body.classList.remove('locked');$('auth').style.display='none';$('who').textContent=`${user.name} • ${user.role}`;
+  configureNav();const first=[...document.querySelectorAll('nav button')].find(b=>!b.classList.contains('hidden'));if(first){first.classList.add('active');showPage(first.dataset.page,first)}
+}
+function init(){
+  db=loadDB();$('dateLine').textContent=new Date().toLocaleString();$('aDate').value=today();$('lDate').value=today();$('pDate').value=today();$('eDate').value=today();
+  const s=currentSession();
+  if(s && db.users.some(u=>u.id===s.id&&u.active)){user=s;enterApp()}else{clearSession();document.body.classList.add('locked');if(db.users.length)$('loginBox').classList.remove('hidden');else $('setupBox').classList.remove('hidden')}
+}
+
+function renderAll(){
+  if(!db||!user)return;
+  $('dateLine').textContent=new Date().toLocaleString();
+  renderIds();renderSelects();renderDashboard();renderCustomers();renderApplications();renderLoans();renderPayments();renderExpenses();renderCashbook();renderStatement();renderReports();renderAlerts();renderDocuments();renderAudit();renderUsers();loadSettings()
+}
+function renderIds(){
+  $('cGenerated').value=nextId('customer','CUS');$('aGenerated').value=nextId('application','APP');$('lGenerated').value=nextId('loan','LN');$('pGenerated').value=nextId('receipt','RCPT');$('eGenerated').value=nextId('expense','EXP')
+}
+function renderSelects(){
+  const opts=db.customers.map(c=>`<option value="${c.id}">${escapeHtml(c.id)} - ${escapeHtml(c.name)}</option>`).join('');
+  ['aCustomer','lCustomer','docCustomer'].forEach(id=>{const el=$(id),old=el.value;el.innerHTML='<option value="">Select...</option>'+opts;if([...el.options].some(o=>o.value===old))el.value=old});
+  const approved=db.applications.filter(a=>a.status==='Approved'&&!a.loanId).map(a=>`<option value="${a.id}">${a.id} - ${escapeHtml(custName(a.customerId))} - ${money(a.amount)}</option>`).join('');
+  const oldA=$('lApplication').value;$('lApplication').innerHTML='<option value="">Select approved application...</option>'+approved;if([...$('lApplication').options].some(o=>o.value===oldA))$('lApplication').value=oldA;
+  const open=db.loans.filter(l=>loanBalance(l)>0.009).map(l=>`<option value="${l.id}">${l.id} - ${escapeHtml(custName(l.customerId))} - ${money(loanBalance(l))}</option>`).join('');
+  const oldP=$('pLoan').value;$('pLoan').innerHTML='<option value="">Select loan...</option>'+open;if([...$('pLoan').options].some(o=>o.value===oldP))$('pLoan').value=oldP;
+}
+function renderDashboard(){
+  $('dCustomers').textContent=db.customers.length;$('dPortfolio').textContent=money(db.loans.reduce((s,l)=>s+loanBalance(l),0));$('dCollected').textContent=money(db.payments.reduce((s,p)=>s+num(p.amount),0));$('dOverdue').textContent=db.loans.filter(l=>loanStatus(l)==='Overdue').length;
+  const cashIn=db.payments.reduce((s,p)=>s+num(p.amount),0),loanOut=db.loans.reduce((s,l)=>s+num(l.principal),0),exp=db.expenses.reduce((s,e)=>s+num(e.amount),0);$('dCash').textContent=money(cashIn-loanOut-exp);
+  const overdue=db.loans.filter(l=>loanStatus(l)==='Overdue'),dueSoon=db.loans.filter(l=>{const n=paymentAllocation(l).next;return n&&n.dueDate>=today()&&daysBetween(today(),n.dueDate)<=num(db.settings.alertDays)});
+  let alertHtml='';if(overdue.length)alertHtml+=`<div class="notice bad"><b>${overdue.length} overdue loan(s)</b><br>${money(overdue.reduce((s,l)=>s+paymentAllocation(l).arrears,0))} in arrears.</div>`;if(dueSoon.length)alertHtml+=`<div class="notice"><b>${dueSoon.length} payment(s) due soon</b><br>Follow up before due date.</div>`;if(!alertHtml)alertHtml='<div class="notice ok">No urgent alerts.</div>';$('dashAlerts').innerHTML=alertHtml;
+  const active=db.loans.filter(l=>loanStatus(l)!=='Closed').length,closed=db.loans.filter(l=>loanStatus(l)==='Closed').length,apps=db.applications.filter(a=>a.status==='Pending').length;
+  $('portfolioSnapshot').innerHTML=`<p><b>${active}</b> active loans</p><p><b>${closed}</b> closed loans</p><p><b>${apps}</b> pending applications</p><p><b>${money(interestCollected())}</b> estimated interest collected</p>`;
+  $('recentLoans').innerHTML=[...db.loans].reverse().slice(0,10).map(l=>{const n=paymentAllocation(l).next;return `<tr><td>${l.id}</td><td>${escapeHtml(custName(l.customerId))}</td><td>${money(l.totalPayable)}</td><td>${money(paid(l.id))}</td><td>${money(loanBalance(l))}</td><td>${n?n.dueDate+' • '+money(n.outstanding):'-'}</td><td>${toBadge(loanStatus(l))}</td></tr>`}).join('')
+}
+function addCustomer(){
+  if(!$('cName').value.trim())return alert('Enter customer name.');
+  const rec={id:nextAndBump('customer','CUS'),name:$('cName').value.trim(),phone:$('cPhone').value.trim(),email:$('cEmail').value.trim(),reference:$('cRef').value.trim(),dob:$('cDob').value,occupation:$('cJob').value.trim(),employer:$('cEmployer').value.trim(),income:num($('cIncome').value),address:$('cAddress').value.trim(),notes:$('cNotes').value.trim(),createdAt:new Date().toISOString(),createdBy:user.username};
+  db.customers.push(rec);audit('CREATE_CUSTOMER',rec.id+' '+rec.name);['cName','cPhone','cEmail','cRef','cDob','cJob','cEmployer','cIncome','cAddress','cNotes'].forEach(id=>$(id).value='');saveDB();renderAll()
+}
+function renderCustomers(){
+  const q=($('cSearch').value||'').toLowerCase();
+  $('customerTable').innerHTML=db.customers.filter(c=>(c.id+' '+c.name+' '+c.phone).toLowerCase().includes(q)).map(c=>`<tr><td>${c.id}</td><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.phone)}</td><td>${db.loans.filter(l=>l.customerId===c.id).length}</td><td>${money(outstandingCustomer(c.id))}</td><td class="actions"><button class="light small" onclick="selectStatement('${c.id}')">Statement</button></td></tr>`).join('')
+}
+function selectStatement(id){showPage('statements',[...document.querySelectorAll('nav button')].find(b=>b.dataset.page==='statements'));chooseStatementCustomer(id)}
+function searchStatementCustomers(){
+  const box=$('sCustomerResults'),q=($('sCustomerSearch').value||'').trim().toLowerCase();
+  const matches=db.customers.filter(c=>!q||(c.name+' '+c.id+' '+(c.phone||'')).toLowerCase().includes(q)).slice(0,20);
+  if(!matches.length){box.innerHTML='<div style="padding:10px;color:#6f7b8f">No customer found.</div>';box.classList.remove('hidden');return}
+  box.innerHTML=matches.map(c=>`<button type="button" onclick="chooseStatementCustomer('${c.id}')" style="display:block;width:100%;text-align:left;background:#fff;color:#172033;border:0;border-bottom:1px solid #edf1f6;border-radius:0;padding:10px 12px;font-weight:normal"><b>${escapeHtml(c.name)}</b><br><span class="muted">${c.id}${c.phone?' • '+escapeHtml(c.phone):''}</span></button>`).join('');
+  box.classList.remove('hidden')
+}
+function chooseStatementCustomer(id){
+  const c=db.customers.find(x=>x.id===id);if(!c)return;
+  $('sCustomer').value=id;$('sCustomerSearch').value=c.name+' ('+c.id+')';$('sCustomerResults').classList.add('hidden');renderStatement()
+}
+document.addEventListener('click',e=>{const r=$('sCustomerResults'),s=$('sCustomerSearch');if(r&&s&&!r.contains(e.target)&&e.target!==s)r.classList.add('hidden')})
+function prefillApplicationCustomer(){const c=db.customers.find(x=>x.id===$('aCustomer').value);if(c){$('aIncome').value=c.income||'';calcAffordability()}}
+function calcAffordability(){
+  const amount=num($('aAmount').value),term=Math.max(1,num($('aTerm').value)||1),rate=num($('aRate').value),income=num($('aIncome').value),expenses=num($('aExpenses').value);
+  const disposable=income-expenses,total=amount+(amount*rate/100*term),install=total/term,ratio=income?install/income*100:0,risk=ratio>num(db.settings.riskRatio)?'HIGH RISK':(ratio>num(db.settings.riskRatio)*0.75?'MEDIUM':'LOW');
+  $('aDisposable').value=money(disposable);$('aInstallment').value=money(install);$('aRatio').value=ratio.toFixed(1)+'%';$('aRisk').value=risk
+}
+function addApplication(){
+  if(!$('aCustomer').value||!num($('aAmount').value))return alert('Select customer and enter requested amount.');
+  calcAffordability();const ratio=parseFloat($('aRatio').value)||0;
+  const rec={id:nextAndBump('application','APP'),customerId:$('aCustomer').value,date:$('aDate').value||today(),amount:num($('aAmount').value),term:Math.max(1,num($('aTerm').value)),rate:num($('aRate').value),income:num($('aIncome').value),expenses:num($('aExpenses').value),disposable:num($('aIncome').value)-num($('aExpenses').value),estimatedInstallment:parseFloat($('aInstallment').value.replace(/[K,]/g,''))||0,ratio,risk:$('aRisk').value,guarantor:$('aGuarantor').value.trim(),guarantorPhone:$('aGuarantorPhone').value.trim(),security:$('aSecurity').value.trim(),purpose:$('aPurpose').value.trim(),notes:$('aNotes').value.trim(),status:'Pending',createdBy:user.username,createdAt:new Date().toISOString(),loanId:''};
+  db.applications.push(rec);audit('CREATE_APPLICATION',rec.id+' '+custName(rec.customerId));saveDB();['aAmount','aIncome','aExpenses','aGuarantor','aGuarantorPhone','aSecurity','aPurpose','aNotes'].forEach(id=>$(id).value='');renderAll()
+}
+function setAppStatus(id,status){
+  const a=db.applications.find(x=>x.id===id);if(!a)return;a.status=status;a.reviewedBy=user.username;a.reviewedAt=new Date().toISOString();audit('APPLICATION_'+status.toUpperCase(),id);saveDB();renderAll()
+}
+function renderApplications(){
+  $('appTable').innerHTML=db.applications.map(a=>`<tr><td>${a.id}</td><td>${escapeHtml(custName(a.customerId))}</td><td>${money(a.amount)}</td><td>${money(a.estimatedInstallment)} / ${money(a.disposable)} disposable</td><td>${toBadge(a.risk||'')}</td><td>${a.scanName?`<button class="light small" onclick="openApplicationPDF('${a.id}')">Open PDF</button>`:`<button class="light small" onclick="attachApplicationPDF('${a.id}')">Attach PDF</button>`}</td><td>${toBadge(a.status)}</td><td class="actions">${a.status==='Pending'?`<button class="success small" onclick="setAppStatus('${a.id}','Approved')">Approve</button> <button class="danger small" onclick="setAppStatus('${a.id}','Rejected')">Reject</button>`:''}${a.status==='Approved'&&!a.loanId?` <button class="small" onclick="startLoanFromApplication('${a.id}')">Create Loan</button>`:''}</td></tr>`).join('')
+}
+function attachApplicationPDF(id){selectPdfFile(async(file)=>{const data=await fileToDataURL(file);const a=db.applications.find(x=>x.id===id);a.scanName=file.name;a.scanData=data;audit('ATTACH_APPLICATION_PDF',id+' '+file.name);saveDB();renderAll()})}
+function openApplicationPDF(id){const a=db.applications.find(x=>x.id===id);if(a?.scanData)openDataUrl(a.scanData)}
+function startLoanFromApplication(id){showPage('loans',[...document.querySelectorAll('nav button')].find(b=>b.dataset.page==='loans'));$('lApplication').value=id;loadApprovedApplication()}
+function loadApprovedApplication(){
+  const a=db.applications.find(x=>x.id===$('lApplication').value);if(!a)return;
+  $('lCustomer').value=a.customerId;$('lPrincipal').value=a.amount;$('lRate').value=a.rate||db.settings.defaultRate;$('lTerm').value=a.term;$('lPurpose').value=a.purpose;$('lSecurity').value=[a.security,a.guarantor?'Guarantor: '+a.guarantor+' '+a.guarantorPhone:''].filter(Boolean).join('\\n');calcLoan()
+}
+function calcLoan(){
+  const p=num($('lPrincipal').value),r=num($('lRate').value||db.settings.defaultRate),m=Math.max(1,num($('lTerm').value)||1),freq=$('lFreq').value,date=$('lDate').value||today(),interest=p*r/100*m,total=p+interest,count=installmentCount(m,freq),install=total/count,due=freq==='Single Payment'?addMonthsSafe(date,m):generateSchedule({date,months:m,frequency:freq,totalPayable:total,dueDate:addMonthsSafe(date,m) }).slice(-1)[0].dueDate;
+  $('lDue').value=due;$('lInstallments').value=count;$('lInstallmentAmount').value=money(install);$('lTotal').value=money(total)
+}
+function createLoan(){
+  const app=db.applications.find(a=>a.id===$('lApplication').value),customerId=$('lCustomer').value,p=num($('lPrincipal').value),r=num($('lRate').value),m=Math.max(1,num($('lTerm').value));
+  if(!customerId||!p)return alert('Select customer and enter principal.');
+  if(app && app.status!=='Approved')return alert('Application must be approved before creating the loan.');
+  calcLoan();const interest=p*r/100*m,total=p+interest;
+  const rec={id:nextAndBump('loan','LN'),applicationId:app?.id||'',customerId,principal:p,rate:r,months:m,interest,totalPayable:total,date:$('lDate').value||today(),dueDate:$('lDue').value,frequency:$('lFreq').value,purpose:$('lPurpose').value.trim(),security:$('lSecurity').value.trim(),createdBy:user.username,createdAt:new Date().toISOString()};
+  db.loans.push(rec);if(app){app.loanId=rec.id}audit('CREATE_LOAN',rec.id+' '+custName(customerId)+' '+money(p));saveDB();renderAll();alert('Loan created with automatic repayment schedule.')
+}
+function renderLoans(){
+  $('loanTable').innerHTML=db.loans.map(l=>{const alloc=paymentAllocation(l),pen=penaltyFor(l),n=alloc.next;return `<tr><td>${l.id}</td><td>${escapeHtml(custName(l.customerId))}</td><td>${money(l.principal)}</td><td>${money(l.totalPayable)}</td><td>${money(paid(l.id))}</td><td>${money(pen)}</td><td>${money(loanBalance(l))}</td><td>${n?n.dueDate+' • '+money(n.outstanding):'-'}</td><td>${money(alloc.arrears)}</td><td>${toBadge(loanStatus(l))}</td><td><button class="light small" onclick="previewSchedule('${l.id}')">Schedule</button></td></tr>`}).join('')
+}
+function previewSchedule(id){
+  const l=loanById(id),alloc=paymentAllocation(l),pen=penaltyFor(l);let cumulative=0;
+  $('schedulePreview').innerHTML=`<h4>${l.id} — ${escapeHtml(custName(l.customerId))}</h4><p>Total payable: <b>${money(l.totalPayable)}</b> • Penalty currently: <b>${money(pen)}</b> • Paid: <b>${money(paid(l.id))}</b></p><table><thead><tr><th>#</th><th>Due Date</th><th>Scheduled</th><th>Cumulative Due</th><th>Status</th></tr></thead><tbody>${alloc.schedule.map(s=>{cumulative+=s.scheduled;const status=paid(l.id)>=cumulative?'Paid':(s.dueDate<today()?'Overdue':'Upcoming');return `<tr><td>${s.no}</td><td>${s.dueDate}</td><td>${money(s.scheduled)}</td><td>${money(cumulative)}</td><td>${toBadge(status)}</td></tr>`}).join('')}</tbody></table>`
+}
+function showPaymentBalance(){
+  const l=loanById($('pLoan').value);if(!l){$('pBalance').className='notice';$('pBalance').textContent='Select a loan.';return}
+  const a=paymentAllocation(l),n=a.next;$('pBalance').className='notice'+(a.arrears?' bad':'');
+  $('pBalance').innerHTML=`Balance: <b>${money(loanBalance(l))}</b> • Arrears: <b>${money(a.arrears)}</b> • Penalty: <b>${money(penaltyFor(l))}</b>${n?` • Next due: <b>${n.dueDate}</b> (${money(n.outstanding)})`:''}`
+}
+function addPayment(){
+  const l=loanById($('pLoan').value),amount=num($('pAmount').value);if(!l||amount<=0)return alert('Select a loan and enter payment amount.');
+  if(amount>loanBalance(l)+0.01 && !confirm('Payment is greater than the current balance. Save anyway?'))return;
+  const rec={id:nextAndBump('receipt','RCPT'),loanId:l.id,customerId:l.customerId,date:$('pDate').value||today(),amount,method:$('pMethod').value,reference:$('pRef').value.trim(),createdBy:user.username,createdAt:new Date().toISOString()};
+  db.payments.push(rec);audit('RECORD_PAYMENT',rec.id+' '+l.id+' '+money(amount));saveDB();$('pAmount').value='';$('pRef').value='';renderAll();printReceipt(rec.id)
+}
+function renderPayments(){
+  $('paymentTable').innerHTML=[...db.payments].reverse().slice(0,50).map(p=>`<tr><td>${p.id}</td><td>${p.date}</td><td>${escapeHtml(custName(p.customerId))}</td><td>${p.loanId}</td><td>${money(p.amount)}</td><td><button class="light small" onclick="printReceipt('${p.id}')">Receipt</button></td></tr>`).join('')
+}
+function printReceipt(id){
+  const p=db.payments.find(x=>x.id===id),l=loanById(p.loanId),c=db.customers.find(x=>x.id===p.customerId);if(!p)return;
+  const body=`<h2>${escapeHtml(db.settings.companyName)}</h2><p>${escapeHtml(db.settings.address)}<br>${escapeHtml(db.settings.phone)} ${db.settings.email?'• '+escapeHtml(db.settings.email):''}</p><hr><h3>PAYMENT RECEIPT</h3><p><b>Receipt:</b> ${p.id}<br><b>Date:</b> ${p.date}<br><b>Customer:</b> ${escapeHtml(c?.name||'')} (${p.customerId})<br><b>Loan:</b> ${p.loanId}<br><b>Amount Paid:</b> ${money(p.amount)}<br><b>Method:</b> ${escapeHtml(p.method)}<br><b>Reference:</b> ${escapeHtml(p.reference)}<br><b>Remaining Balance:</b> ${money(loanBalance(l))}</p><p>Received by: ${escapeHtml(p.createdBy||'')}</p>`;
+  printWindow('Payment Receipt',body)
+}
+function addExpense(){
+  const amount=num($('eAmount').value);if(amount<=0)return alert('Enter expense amount.');
+  const rec={id:nextAndBump('expense','EXP'),date:$('eDate').value||today(),category:$('eCategory').value,amount,payee:$('ePayee').value.trim(),reference:$('eRef').value.trim(),description:$('eDescription').value.trim(),createdBy:user.username,createdAt:new Date().toISOString()};
+  db.expenses.push(rec);audit('RECORD_EXPENSE',rec.id+' '+money(amount));saveDB();['eAmount','ePayee','eRef','eDescription'].forEach(id=>$(id).value='');renderAll()
+}
+function renderExpenses(){$('expenseTable').innerHTML=[...db.expenses].reverse().map(e=>`<tr><td>${e.id}</td><td>${e.date}</td><td>${escapeHtml(e.category)}</td><td>${escapeHtml(e.payee)}</td><td>${money(e.amount)}</td><td>${escapeHtml(e.description)}</td></tr>`).join('')}
+function cashEntries(){
+  const rows=[];
+  db.loans.forEach(l=>rows.push({date:l.date,type:'Loan Disbursement',ref:l.id,desc:custName(l.customerId),cin:0,cout:num(l.principal)}));
+  db.payments.forEach(p=>rows.push({date:p.date,type:'Repayment',ref:p.id,desc:custName(p.customerId)+' / '+p.loanId,cin:num(p.amount),cout:0}));
+  db.expenses.forEach(e=>rows.push({date:e.date,type:'Expense',ref:e.id,desc:e.category+' - '+e.payee,cin:0,cout:num(e.amount)}));
+  return rows.sort((a,b)=>a.date.localeCompare(b.date)||a.ref.localeCompare(b.ref))
+}
+function renderCashbook(){
+  const rows=cashEntries();let run=0;const ci=rows.reduce((s,r)=>s+r.cin,0),lo=db.loans.reduce((s,l)=>s+num(l.principal),0),ex=db.expenses.reduce((s,e)=>s+num(e.amount),0);
+  $('cbIn').textContent=money(ci);$('cbLoans').textContent=money(lo);$('cbExpenses').textContent=money(ex);$('cbNet').textContent=money(ci-lo-ex);$('cbInterest').textContent=money(interestCollected());
+  $('cashbookTable').innerHTML=rows.map(r=>{run+=r.cin-r.cout;return `<tr><td>${r.date}</td><td>${r.type}</td><td>${r.ref}</td><td>${escapeHtml(r.desc)}</td><td>${r.cin?money(r.cin):''}</td><td>${r.cout?money(r.cout):''}</td><td>${money(run)}</td></tr>`}).join('')
+}
+function renderStatement(){
+  if(!$('sCustomer'))return;const id=$('sCustomer').value,c=db.customers.find(x=>x.id===id);if(!c){$('statement').innerHTML='<p class="muted">Search and select a customer to view statement.</p>';return}
+  const loans=db.loans.filter(l=>l.customerId===id);
+  const totalPrincipal=loans.reduce((s,l)=>s+num(l.principal),0);
+  const totalInterest=loans.reduce((s,l)=>s+num(l.interest),0);
+  const totalPenalties=loans.reduce((s,l)=>s+penaltyFor(l),0);
+  const totalContracted=loans.reduce((s,l)=>s+num(l.totalPayable),0);
+  const totalPaid=db.payments.filter(p=>p.customerId===id).reduce((s,p)=>s+num(p.amount),0);
+  const totalOutstanding=loans.reduce((s,l)=>s+loanBalance(l),0);
+  let rows=[];
+  loans.forEach(l=>rows.push({date:l.date,type:loans.length>1?'Additional Loan':'Loan',ref:l.id,debit:num(l.totalPayable),credit:0,detail:`Principal ${money(l.principal)} + Interest ${money(l.interest)}`}));
+  db.payments.filter(p=>p.customerId===id).forEach(p=>rows.push({date:p.date,type:'Payment',ref:p.id,debit:0,credit:num(p.amount),detail:p.loanId}));
+  rows.sort((a,b)=>a.date.localeCompare(b.date)||a.ref.localeCompare(b.ref));let run=0;
+  const loanSummary=loans.length?`<h4>Combined Loan Summary</h4><table><thead><tr><th>Loan</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total Payable</th><th>Paid</th><th>Penalty</th><th>Balance</th></tr></thead><tbody>${loans.map(l=>`<tr><td>${l.id}</td><td>${l.date}</td><td>${money(l.principal)}</td><td>${money(l.interest)}</td><td>${money(l.totalPayable)}</td><td>${money(paid(l.id))}</td><td>${money(penaltyFor(l))}</td><td>${money(loanBalance(l))}</td></tr>`).join('')}<tr><th colspan="2">COMBINED TOTAL</th><th>${money(totalPrincipal)}</th><th>${money(totalInterest)}</th><th>${money(totalContracted)}</th><th>${money(totalPaid)}</th><th>${money(totalPenalties)}</th><th>${money(totalOutstanding)}</th></tr></tbody></table>`:'<p>No loans recorded for this customer.</p>';
+  $('statement').innerHTML=`${companyHeader('CONSOLIDATED CUSTOMER STATEMENT')}<p><b>Customer:</b> ${escapeHtml(c.name)} (${c.id})<br><b>Phone:</b> ${escapeHtml(c.phone)}<br><b>Email:</b> ${escapeHtml(c.email)}</p><div class="grid3"><div class="notice ok"><b>Total Principal Borrowed</b><br>${money(totalPrincipal)}</div><div class="notice"><b>Total Interest</b><br>${money(totalInterest)}</div><div class="notice ${totalOutstanding?'bad':'ok'}"><b>Total Outstanding</b><br>${money(totalOutstanding)}</div></div>${loanSummary}<h4>Combined Transaction Statement</h4><table><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Details</th><th>Debit</th><th>Credit</th><th>Running Balance</th></tr></thead><tbody>${rows.map(r=>{run+=r.debit-r.credit;return `<tr><td>${r.date}</td><td>${r.type}</td><td>${r.ref}</td><td>${escapeHtml(r.detail||'')}</td><td>${r.debit?money(r.debit):''}</td><td>${r.credit?money(r.credit):''}</td><td>${money(run)}</td></tr>`}).join('')}</tbody></table><h3>Combined Current Outstanding: ${money(totalOutstanding)}</h3>`
+}
+function printCustomerConsolidatedReceipt(){
+  const id=$('sCustomer').value,c=db.customers.find(x=>x.id===id);if(!c)return alert('Search and select a customer first.');
+  const loans=db.loans.filter(l=>l.customerId===id),payments=db.payments.filter(p=>p.customerId===id);
+  if(!loans.length)return alert('This customer has no loans.');
+  const principal=loans.reduce((s,l)=>s+num(l.principal),0),interest=loans.reduce((s,l)=>s+num(l.interest),0),contracted=loans.reduce((s,l)=>s+num(l.totalPayable),0),penalties=loans.reduce((s,l)=>s+penaltyFor(l),0),collected=payments.reduce((s,p)=>s+num(p.amount),0),balance=loans.reduce((s,l)=>s+loanBalance(l),0);
+  const body=`${companyHeader('CONSOLIDATED CUSTOMER RECEIPT')}<p><b>Customer:</b> ${escapeHtml(c.name)} (${c.id})<br><b>Date:</b> ${today()}<br><b>Number of Loans:</b> ${loans.length}</p><table><thead><tr><th>Loan</th><th>Principal</th><th>Interest</th><th>Total</th><th>Paid</th><th>Balance</th></tr></thead><tbody>${loans.map(l=>`<tr><td>${l.id}</td><td>${money(l.principal)}</td><td>${money(l.interest)}</td><td>${money(l.totalPayable)}</td><td>${money(paid(l.id))}</td><td>${money(loanBalance(l))}</td></tr>`).join('')}</tbody></table><h3>Combined Totals</h3><p><b>Total Principal:</b> ${money(principal)}<br><b>Total Interest:</b> ${money(interest)}<br><b>Total Contracted:</b> ${money(contracted)}<br><b>Penalties:</b> ${money(penalties)}<br><b>Total Payments Received:</b> ${money(collected)}<br><b>Current Outstanding:</b> ${money(balance)}</p>`;
+  printWindow('Consolidated Customer Receipt',body)
+}
+function companyHeader(title){
+  const brand=db.settings.letterhead?`<img src="${db.settings.letterhead}" style="max-width:100%;max-height:100px;object-fit:contain">`:(db.settings.logo?`<img src="${db.settings.logo}" style="max-height:70px">`:'');
+  return `${brand}<h2>${escapeHtml(db.settings.companyName)}</h2><p>${escapeHtml(db.settings.address)}<br>${escapeHtml(db.settings.phone)} ${db.settings.email?'• '+escapeHtml(db.settings.email):''}</p><h3>${title}</h3>`
+}
+function printWindow(title,body){const w=window.open('','_blank','width=850,height=700');if(!w)return alert('Allow pop-ups to print documents.');w.document.write(`<html><head><title>${title}</title><style>body{font:14px Arial;padding:30px;color:#172033}table{width:100%;border-collapse:collapse}th,td{padding:8px;border:1px solid #ccd3dd;text-align:left}h2,h3{margin-bottom:6px}</style></head><body>${body}<script>setTimeout(()=>window.print(),300)<\/script></body></html>`);w.document.close()}
+function renderReports(){
+  const principal=db.loans.reduce((s,l)=>s+num(l.principal),0),interest=db.loans.reduce((s,l)=>s+num(l.interest),0),icol=interestCollected(),exp=db.expenses.reduce((s,e)=>s+num(e.amount),0);
+  $('rPrincipal').textContent=money(principal);$('rInterest').textContent=money(interest);$('rInterestCollected').textContent=money(icol);$('rExpenses').textContent=money(exp);$('rNetIncome').textContent=money(icol-exp);
+  const buckets={'Current':0,'1-30 days':0,'31-60 days':0,'61-90 days':0,'90+ days':0};db.loans.forEach(l=>{const d=daysOverdue(l),b=loanBalance(l);if(d===0)buckets['Current']+=b;else if(d<=30)buckets['1-30 days']+=b;else if(d<=60)buckets['31-60 days']+=b;else if(d<=90)buckets['61-90 days']+=b;else buckets['90+ days']+=b});
+  $('agingReport').innerHTML=Object.entries(buckets).map(([k,v])=>`<p><b>${k}:</b> ${money(v)}</p>`).join('');
+  const totalOutstanding=db.loans.reduce((s,l)=>s+loanBalance(l),0),arrears=db.loans.reduce((s,l)=>s+paymentAllocation(l).arrears,0),collection=db.loans.reduce((s,l)=>s+num(l.totalPayable),0);
+  const ratio=totalOutstanding?arrears/totalOutstanding*100:0,collectionRate=collection?db.payments.reduce((s,p)=>s+num(p.amount),0)/collection*100:0;
+  $('ratioReport').innerHTML=`<p><b>Portfolio at Risk (arrears/outstanding):</b> ${ratio.toFixed(1)}%</p><p><b>Collection vs contracted:</b> ${collectionRate.toFixed(1)}%</p><p><b>Active loans:</b> ${db.loans.filter(l=>loanStatus(l)!=='Closed').length}</p><p><b>Closed loans:</b> ${db.loans.filter(l=>loanStatus(l)==='Closed').length}</p>`;
+  $('reportTable').innerHTML=db.loans.map(l=>`<tr><td>${l.id}</td><td>${escapeHtml(custName(l.customerId))}</td><td>${money(l.principal)}</td><td>${money(l.totalPayable)}</td><td>${money(paid(l.id))}</td><td>${money(loanBalance(l))}</td><td>${money(paymentAllocation(l).arrears)}</td><td>${daysOverdue(l)}</td><td>${toBadge(loanStatus(l))}</td></tr>`).join('')
+}
+function renderAlerts(){
+  const alerts=[];db.loans.forEach(l=>{const alloc=paymentAllocation(l),n=alloc.next,status=loanStatus(l);if(status==='Overdue')alerts.push({kind:'bad',title:`${l.id} — ${custName(l.customerId)}`,msg:`${money(alloc.arrears)} arrears • ${daysOverdue(l)} day(s) overdue • penalty ${money(penaltyFor(l))}`});else if(n&&n.dueDate>=today()&&daysBetween(today(),n.dueDate)<=num(db.settings.alertDays))alerts.push({kind:'warn',title:`${l.id} — ${custName(l.customerId)}`,msg:`Next payment ${money(n.outstanding)} due ${n.dueDate}`})});
+  db.applications.filter(a=>a.status==='Pending').forEach(a=>alerts.push({kind:'warn',title:`Application ${a.id}`,msg:`${custName(a.customerId)} requested ${money(a.amount)} • ${a.risk} risk`}));
+  $('alertsList').innerHTML=alerts.length?alerts.map(a=>`<div class="notice ${a.kind==='bad'?'bad':''}"><b>${escapeHtml(a.title)}</b><br>${escapeHtml(a.msg)}</div>`).join(''):'<div class="notice ok">No alerts requiring action.</div>'
+}
+function selectPdfFile(cb){const i=document.createElement('input');i.type='file';i.accept='application/pdf';i.onchange=()=>i.files[0]&&cb(i.files[0]);i.click()}
+function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+function openDataUrl(data){const w=window.open();if(w)w.location.href=data}
+function uploadDocument(){
+  const customerId=$('docCustomer').value;if(!customerId)return alert('Select customer.');
+  selectPdfFile(async(file)=>{const data=await fileToDataURL(file),rec={id:nextAndBump('document','DOC'),customerId,type:$('docType').value,fileName:file.name,fileData:data,date:today(),uploadedBy:user.username};db.documents.push(rec);audit('UPLOAD_DOCUMENT',rec.id+' '+file.name);saveDB();renderAll()})
+}
+function renderDocuments(){$('documentTable').innerHTML=[...db.documents].reverse().map(d=>`<tr><td>${d.date}</td><td>${escapeHtml(custName(d.customerId))}</td><td>${escapeHtml(d.type)}</td><td>${escapeHtml(d.fileName)}</td><td><button class="light small" onclick="openDocument('${d.id}')">Open</button> <button class="danger small" onclick="deleteDocument('${d.id}')">Delete</button></td></tr>`).join('')}
+function openDocument(id){const d=db.documents.find(x=>x.id===id);if(d)openDataUrl(d.fileData)}
+function deleteDocument(id){if(!confirm('Delete this document?'))return;const i=db.documents.findIndex(x=>x.id===id);if(i>=0){const name=db.documents[i].fileName;db.documents.splice(i,1);audit('DELETE_DOCUMENT',id+' '+name);saveDB();renderAll()}}
+function renderAudit(){$('auditTable').innerHTML=db.audit.slice(0,1000).map(a=>`<tr><td>${new Date(a.time).toLocaleString()}</td><td>${escapeHtml(a.user)}</td><td>${escapeHtml(a.role)}</td><td>${escapeHtml(a.action)}</td><td>${escapeHtml(a.details)}</td></tr>`).join('')}
+async function addUser(){
+  if(user.role!=='Admin')return alert('Admin only.');const name=$('uName').value.trim(),username=$('uUser').value.trim(),password=$('uPass').value,role=$('uRole').value;if(!username||password.length<8)return alert('Username and password of at least 8 characters required.');if(db.users.some(u=>u.username.toLowerCase()===username.toLowerCase()))return alert('Username already exists.');
+  const salt=Math.random().toString(36).slice(2)+Date.now(),passwordHash=await hashText(username.toLowerCase()+'|'+password+'|'+salt),rec={id:'USR-'+Date.now(),name:name||username,username,role,active:true,salt,passwordHash,created:new Date().toISOString()};db.users.push(rec);audit('CREATE_USER',username+' '+role);$('uPass').value='';saveDB();renderAll()
+}
+async function resetUser(id){const u=db.users.find(x=>x.id===id),p=prompt('Enter a new password (minimum 8 characters):');if(!u||!p)return;if(p.length<8)return alert('Password too short.');u.salt=Math.random().toString(36).slice(2)+Date.now();u.passwordHash=await hashText(u.username.toLowerCase()+'|'+p+'|'+u.salt);audit('RESET_USER_PASSWORD',u.username);saveDB();alert('Password reset.')}
+function toggleUser(id){const u=db.users.find(x=>x.id===id);if(!u)return;if(u.id===user.id)return alert('You cannot disable your own account.');u.active=!u.active;audit('TOGGLE_USER',u.username+' '+(u.active?'active':'disabled'));saveDB();renderAll()}
+function renderUsers(){if(user.role!=='Admin')return;$('userTable').innerHTML=db.users.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.role)}</td><td>${u.active?'Active':'Disabled'}</td><td><button class="light small" onclick="resetUser('${u.id}')">Reset Password</button> <button class="danger small" onclick="toggleUser('${u.id}')">${u.active?'Disable':'Enable'}</button></td></tr>`).join('')}
+function loadSettings(){const s=db.settings;$('setName').value=s.companyName||'';$('setPhone').value=s.phone||'';$('setEmail').value=s.email||'';$('setAddress').value=s.address||'';$('setRate').value=s.defaultRate??10;$('setPenaltyRate').value=s.penaltyRate??2;$('setGrace').value=s.graceDays??3;$('setRiskRatio').value=s.riskRatio??50;$('setAlertDays').value=s.alertDays??3;if(!$('lRate').value)$('lRate').value=s.defaultRate||10;if(!$('aRate').value)$('aRate').value=s.defaultRate||10}
+function saveSettings(){db.settings={...db.settings,companyName:$('setName').value.trim(),phone:$('setPhone').value.trim(),email:$('setEmail').value.trim(),address:$('setAddress').value.trim(),defaultRate:num($('setRate').value),penaltyRate:num($('setPenaltyRate').value),graceDays:num($('setGrace').value),riskRatio:num($('setRiskRatio').value),alertDays:num($('setAlertDays').value)};audit('UPDATE_SETTINGS','Company and automation settings updated');saveDB();renderAll();alert('Settings saved.')}
+function uploadBrand(kind){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;db.settings[kind]=await fileToDataURL(f);audit('UPDATE_BRANDING',kind+' '+f.name);saveDB();renderAll()};i.click()}
+function exportLoansCSV(){
+  const rows=[['Loan ID','Customer','Principal','Total Payable','Paid','Penalty','Balance','Arrears','Days Overdue','Status']];db.loans.forEach(l=>rows.push([l.id,custName(l.customerId),l.principal,l.totalPayable,paid(l.id),penaltyFor(l),loanBalance(l),paymentAllocation(l).arrears,daysOverdue(l),loanStatus(l)]));
+  const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\\n'),blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Kopun_Finance_Loan_Report_'+today()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)
+}
+function backupData(){
+  const copy=clone(db);const blob=new Blob([JSON.stringify(copy,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Kopun_Finance_Backup_'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);audit('BACKUP_DATA','Backup downloaded')
+}
+function restoreData(ev){
+  const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.users||!x.settings)throw new Error('Invalid backup');if(confirm('Restore this backup? Current data will be replaced.')){db=x;saveDB();clearSession();alert('Backup restored. Please login again.');location.reload()}}catch(e){alert('Could not restore backup: '+e.message)}};r.readAsText(f);ev.target.value=''
+}
+
+init();
+</script>
+</body>
+</html>
